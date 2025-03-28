@@ -31,8 +31,11 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 
 	// command line args
 	cmd.Flags().StringVar(&c.tusUrl, "url", "", "Tus URL")
+	cmd.MarkFlagRequired("url")
 	cmd.Flags().StringVarP(&c.videoFile, "input", "i", "", "Video file to upload")
+	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.apiToken, "token", "", "API token")
+	cmd.MarkFlagRequired("token")
 
 	return nil
 }
