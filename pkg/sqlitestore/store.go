@@ -20,7 +20,7 @@ func NewSqliteStore(database string) (tus.Store, error) {
 	}
 
 	// create table if it didn't exist
-	_, err = db.Exec("CREATE TABLE IF NOT EXIST fingerprints(fingerprint TEXT PRIMARY KEY, url TEXT)")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS fingerprints(fingerprint TEXT PRIMARY KEY, url TEXT)")
 	if err != nil {
 		return nil, err
 	}
