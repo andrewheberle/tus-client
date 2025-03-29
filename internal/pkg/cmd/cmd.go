@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
 	tus "github.com/eventials/go-tus"
 )
@@ -17,6 +18,10 @@ type rootCommand struct {
 	tusUrl    string
 	videoFile string
 	apiToken  string
+	db        string
+	resume    bool
+
+	store tus.Store
 
 	commands []simplecobra.Commander
 }
@@ -36,11 +41,25 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.apiToken, "token", "", "API token")
 	cmd.MarkFlagRequired("token")
+	cmd.Flags().StringVar(&c.db, "db", "", "Database to allow resumable uploads")
+	cmd.Flags().BoolVar(&c.resume, "resume", false, "Resume a prior upload")
 
 	return nil
 }
 
 func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
+	if c.resume && c.db == "" {
+		return fmt.Errorf("when the resume option is provided the db option must also be provided")
+	}
+
+	if c.db != "" {
+		store, err := sqlitestore.NewSqliteStore(c.db)
+		if err != nil {
+			return err
+		}
+
+		c.store = store
+	}
 	return nil
 }
 
@@ -57,9 +76,9 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 
 	config := &tus.Config{
 		ChunkSize:           50 * 1024 * 1024, // Required a minimum chunk size of 5 MB, here we use 50 MB.
-		Resume:              false,
+		Resume:              c.resume,
 		OverridePatchMethod: false,
-		Store:               nil,
+		Store:               c.store,
 		Header:              headers,
 		HttpClient:          nil,
 	}
