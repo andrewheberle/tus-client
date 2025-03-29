@@ -104,12 +104,12 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 		return err
 	}
 
-	uploader, err := client.CreateUpload(upload)
+	uploader, err := client.CreateOrResumeUpload(upload)
 	if err != nil {
 		return err
 	}
 
-	// upload chunck by chunk
+	// upload chunk by chunk
 	bar := progressbar.Default(100, "uploading")
 	for {
 		bar.Set64(upload.Progress())
