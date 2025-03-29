@@ -9,17 +9,19 @@ import (
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
 	tus "github.com/eventials/go-tus"
+	"github.com/schollz/progressbar/v3"
 )
 
 type rootCommand struct {
 	name string
 
 	// flags
-	tusUrl    string
-	videoFile string
-	apiToken  string
-	db        string
-	resume    bool
+	tusUrl      string
+	videoFile   string
+	apiToken    string
+	db          string
+	resume      bool
+	chunkSizeMb int
 
 	store tus.Store
 
@@ -43,15 +45,18 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("token")
 	cmd.Flags().StringVar(&c.db, "db", "", "Database to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.resume, "resume", false, "Resume a prior upload")
+	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 50, "Chunks size (in MB) for uploads")
 
 	return nil
 }
 
 func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
+	// check that a db path was provided when resume is specified
 	if c.resume && c.db == "" {
 		return fmt.Errorf("when the resume option is provided the db option must also be provided")
 	}
 
+	// set up store
 	if c.db != "" {
 		store, err := sqlitestore.NewSqliteStore(c.db)
 		if err != nil {
@@ -60,6 +65,12 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 
 		c.store = store
 	}
+
+	// validate chunk size
+	if c.chunkSizeMb < 5 {
+		return fmt.Errorf("chunksize must be >= 5")
+	}
+
 	return nil
 }
 
@@ -75,7 +86,7 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiToken))
 
 	config := &tus.Config{
-		ChunkSize:           50 * 1024 * 1024, // Required a minimum chunk size of 5 MB, here we use 50 MB.
+		ChunkSize:           int64(c.chunkSizeMb) * 1024 * 1024,
 		Resume:              c.resume,
 		OverridePatchMethod: false,
 		Store:               c.store,
@@ -98,7 +109,26 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 		return err
 	}
 
-	return uploader.Upload()
+	// upload chunck by chunk
+	bar := progressbar.Default(100, "uploading")
+	for {
+		bar.Set64(upload.Progress())
+		if upload.Finished() {
+			break
+		}
+
+		if err := uploader.UploadChunck(); err != nil {
+			fmt.Printf("Chunk upload failed: %s\n", err)
+			break
+		}
+	}
+
+	if !upload.Finished() {
+		return fmt.Errorf("upload incomplete")
+	}
+
+	fmt.Printf("Upload completed succesfully\n")
+	return nil
 }
 
 func (c *rootCommand) Commands() []simplecobra.Commander {
