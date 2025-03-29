@@ -46,7 +46,6 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 
 func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args []string) error {
 	f, err := os.Open(c.videoFile)
-
 	if err != nil {
 		return err
 	}
@@ -65,11 +64,20 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 		HttpClient:          nil,
 	}
 
-	client, _ := tus.NewClient(c.tusUrl, config)
+	client, err := tus.NewClient(c.tusUrl, config)
+	if err != nil {
+		return err
+	}
 
-	upload, _ := tus.NewUploadFromFile(f)
+	upload, err := tus.NewUploadFromFile(f)
+	if err != nil {
+		return err
+	}
 
-	uploader, _ := client.CreateUpload(upload)
+	uploader, err := client.CreateUpload(upload)
+	if err != nil {
+		return err
+	}
 
 	return uploader.Upload()
 }
