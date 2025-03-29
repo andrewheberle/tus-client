@@ -34,7 +34,7 @@ func (c *rootCommand) Name() string {
 
 func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd := cd.CobraCommand
-	cmd.Short = "A simple HTTP server"
+	cmd.Short = "A command line TUS client"
 
 	// command line args
 	cmd.Flags().StringVar(&c.tusUrl, "url", "", "Tus URL")
