@@ -51,9 +51,9 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.Flags().StringVarP(&c.videoFile, "input", "i", "", "Video file to upload")
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.bearerToken, "token", "", "Authorization Bearer token")
-	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Database to allow resumable uploads")
+	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Path of database to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
-	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 5, "Chunks size (in MB) for uploads")
+	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
 
 	return nil
 }
@@ -69,11 +69,6 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 
 			c.store = store
 		}
-	}
-
-	// validate chunk size
-	if c.chunkSizeMb < 5 {
-		return fmt.Errorf("chunksize must be >= 5")
 	}
 
 	return nil
