@@ -18,7 +18,7 @@ type rootCommand struct {
 	// flags
 	tusUrl      string
 	videoFile   string
-	apiToken    string
+	bearerToken string
 	db          string
 	resume      bool
 	chunkSizeMb int
@@ -41,8 +41,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("url")
 	cmd.Flags().StringVarP(&c.videoFile, "input", "i", "", "Video file to upload")
 	cmd.MarkFlagRequired("input")
-	cmd.Flags().StringVar(&c.apiToken, "token", "", "API token")
-	cmd.MarkFlagRequired("token")
+	cmd.Flags().StringVar(&c.bearerToken, "token", "", "Authorization Bearer token")
 	cmd.Flags().StringVar(&c.db, "db", "", "Database to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.resume, "resume", false, "Resume a prior upload")
 	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 50, "Chunks size (in MB) for uploads")
@@ -83,7 +82,9 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	defer f.Close()
 
 	headers := make(http.Header)
-	headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.apiToken))
+	if c.bearerToken != "" {
+		headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.bearerToken))
+	}
 
 	config := &tus.Config{
 		ChunkSize:           int64(c.chunkSizeMb) * 1024 * 1024,
