@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
 	tus "github.com/eventials/go-tus"
+	"github.com/kirsle/configdir"
 	"github.com/schollz/progressbar/v3"
 )
 
@@ -16,12 +18,12 @@ type rootCommand struct {
 	name string
 
 	// flags
-	tusUrl      string
-	videoFile   string
-	bearerToken string
-	db          string
-	resume      bool
-	chunkSizeMb int
+	tusUrl        string
+	videoFile     string
+	bearerToken   string
+	db            string
+	disableResume bool
+	chunkSizeMb   int
 
 	store tus.Store
 
@@ -34,35 +36,39 @@ func (c *rootCommand) Name() string {
 
 func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd := cd.CobraCommand
-	cmd.Short = "A command line TUS client"
+	cmd.Short = "A command line tus client"
+
+	// create app specific config location
+	configPath := configdir.LocalConfig(c.Name())
+	err := configdir.MakePath(configPath)
+	if err != nil {
+		return err
+	}
 
 	// command line args
-	cmd.Flags().StringVar(&c.tusUrl, "url", "", "Tus URL")
+	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus URL")
 	cmd.MarkFlagRequired("url")
 	cmd.Flags().StringVarP(&c.videoFile, "input", "i", "", "Video file to upload")
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.bearerToken, "token", "", "Authorization Bearer token")
-	cmd.Flags().StringVar(&c.db, "db", "", "Database to allow resumable uploads")
-	cmd.Flags().BoolVar(&c.resume, "resume", false, "Resume a prior upload")
-	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 50, "Chunks size (in MB) for uploads")
+	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Database to allow resumable uploads")
+	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
+	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 5, "Chunks size (in MB) for uploads")
 
 	return nil
 }
 
 func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
-	// check that a db path was provided when resume is specified
-	if c.resume && c.db == "" {
-		return fmt.Errorf("when the resume option is provided the db option must also be provided")
-	}
+	if !c.disableResume {
+		// set up store
+		if c.db != "" {
+			store, err := sqlitestore.NewSqliteStore(c.db)
+			if err != nil {
+				return err
+			}
 
-	// set up store
-	if c.db != "" {
-		store, err := sqlitestore.NewSqliteStore(c.db)
-		if err != nil {
-			return err
+			c.store = store
 		}
-
-		c.store = store
 	}
 
 	// validate chunk size
@@ -88,40 +94,51 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 
 	config := &tus.Config{
 		ChunkSize:           int64(c.chunkSizeMb) * 1024 * 1024,
-		Resume:              c.resume,
+		Resume:              !c.disableResume,
 		OverridePatchMethod: false,
 		Store:               c.store,
 		Header:              headers,
 		HttpClient:          nil,
 	}
 
+	// initialise new tus client
 	client, err := tus.NewClient(c.tusUrl, config)
 	if err != nil {
 		return err
 	}
 
+	// create upload from file
 	upload, err := tus.NewUploadFromFile(f)
 	if err != nil {
 		return err
 	}
 
+	// create uploader or resume if partial from upload
 	uploader, err := client.CreateOrResumeUpload(upload)
 	if err != nil {
 		return err
 	}
 
-	// upload chunk by chunk
-	bar := progressbar.Default(100, "uploading")
+	// set up progress bar
+	bar := progressbar.DefaultBytes(upload.Size(), "uploading")
+	defer bar.Close()
+
+	// set initial upload progress
+	bar.Set64(upload.Offset())
 	for {
-		bar.Set64(upload.Progress())
+		// check if upload is done
 		if upload.Finished() {
 			break
 		}
 
+		// upload next chunk
 		if err := uploader.UploadChunck(); err != nil {
 			fmt.Printf("Chunk upload failed: %s\n", err)
 			break
 		}
+
+		// update progress
+		bar.Set64(upload.Offset())
 	}
 
 	if !upload.Finished() {
