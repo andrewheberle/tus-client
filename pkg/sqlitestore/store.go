@@ -8,7 +8,7 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-// SqliteStore implements an in-memory Store for resumable uploads via github.com/eventials/go-tus
+// SqliteStore implements an SQLite based store for resumable uploads via github.com/eventials/go-tus
 type SqliteStore struct {
 	db *sql.DB
 }
