@@ -154,7 +154,7 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	}
 
 	if !c.quiet {
-		fmt.Printf("Upload completed succesfully\n")
+		fmt.Printf("Upload completed successfully\n")
 	}
 	return nil
 }
