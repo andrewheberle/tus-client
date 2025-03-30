@@ -8,11 +8,12 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 )
 
-// SqliteStore implements an in-memory Store.
+// SqliteStore implements an in-memory Store for resumable uploads via github.com/eventials/go-tus
 type SqliteStore struct {
 	db *sql.DB
 }
 
+// NewSqliteStore creates a new SqliteStore using the provided database path
 func NewSqliteStore(database string) (tus.Store, error) {
 	db, err := sql.Open("sqlite", database)
 	if err != nil {

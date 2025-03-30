@@ -48,9 +48,9 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	}
 
 	// command line args
-	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus URL")
+	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus upload URL")
 	cmd.MarkFlagRequired("url")
-	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "Video file to upload")
+	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "File to upload via tus")
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.bearerToken, "token", "", "Authorization Bearer token")
 	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Path of database to allow resumable uploads")
