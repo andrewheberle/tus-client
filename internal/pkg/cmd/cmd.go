@@ -25,6 +25,7 @@ type rootCommand struct {
 	disableResume bool
 	chunkSizeMb   int
 	noProgress    bool
+	quiet         bool
 
 	store tus.Store
 
@@ -56,6 +57,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
 	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
+	cmd.Flags().BoolVarP(&c.quiet, "quiet", "q", false, "Disable all output except for errors")
 
 	return nil
 }
@@ -119,7 +121,7 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 
 	// set up progress bar
 	var bar *progressbar.ProgressBar
-	if c.noProgress {
+	if c.noProgress || c.quiet {
 		bar = progressbar.DefaultBytesSilent(upload.Size(), "uploading")
 	} else {
 		bar = progressbar.DefaultBytes(upload.Size(), "uploading")
@@ -129,7 +131,9 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	// set initial upload progress
 	bar.Set64(upload.Offset())
 
-	fmt.Printf("Starting upload of \"%s\"...", c.inputFile)
+	if !c.quiet {
+		fmt.Printf("Starting upload of \"%s\"...", c.inputFile)
+	}
 	for {
 		// check if upload is done
 		if upload.Finished() {
@@ -138,8 +142,7 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 
 		// upload next chunk
 		if err := uploader.UploadChunck(); err != nil {
-			fmt.Printf("Chunk upload failed: %s\n", err)
-			break
+			return fmt.Errorf("chunk upload failed: %w", err)
 		}
 
 		// update progress
@@ -150,7 +153,9 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 		return fmt.Errorf("upload incomplete")
 	}
 
-	fmt.Printf("Upload completed succesfully\n")
+	if !c.quiet {
+		fmt.Printf("Upload completed succesfully\n")
+	}
 	return nil
 }
 
