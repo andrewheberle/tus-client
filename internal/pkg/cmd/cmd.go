@@ -19,11 +19,12 @@ type rootCommand struct {
 
 	// flags
 	tusUrl        string
-	videoFile     string
+	inputFile     string
 	bearerToken   string
 	db            string
 	disableResume bool
 	chunkSizeMb   int
+	noProgress    bool
 
 	store tus.Store
 
@@ -48,12 +49,13 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	// command line args
 	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus URL")
 	cmd.MarkFlagRequired("url")
-	cmd.Flags().StringVarP(&c.videoFile, "input", "i", "", "Video file to upload")
+	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "Video file to upload")
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.bearerToken, "token", "", "Authorization Bearer token")
 	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Path of database to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
 	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
+	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
 
 	return nil
 }
@@ -75,11 +77,11 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 }
 
 func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args []string) error {
-	f, err := os.Open(c.videoFile)
+	// open input file
+	f, err := os.Open(c.inputFile)
 	if err != nil {
 		return err
 	}
-
 	defer f.Close()
 
 	headers := make(http.Header)
@@ -87,6 +89,7 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 		headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.bearerToken))
 	}
 
+	// set up tus config
 	config := &tus.Config{
 		ChunkSize:           int64(c.chunkSizeMb) * 1024 * 1024,
 		Resume:              !c.disableResume,
@@ -115,11 +118,18 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	}
 
 	// set up progress bar
-	bar := progressbar.DefaultBytes(upload.Size(), "uploading")
+	var bar *progressbar.ProgressBar
+	if c.noProgress {
+		bar = progressbar.DefaultBytesSilent(upload.Size(), "uploading")
+	} else {
+		bar = progressbar.DefaultBytes(upload.Size(), "uploading")
+	}
 	defer bar.Close()
 
 	// set initial upload progress
 	bar.Set64(upload.Offset())
+
+	fmt.Printf("Starting upload of \"%s\"...", c.inputFile)
 	for {
 		// check if upload is done
 		if upload.Finished() {
