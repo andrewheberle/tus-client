@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
@@ -20,12 +21,12 @@ type rootCommand struct {
 	// flags
 	tusUrl        string
 	inputFile     string
-	bearerToken   string
 	db            string
 	disableResume bool
 	chunkSizeMb   int
 	noProgress    bool
 	quiet         bool
+	headers       []string
 
 	store tus.Store
 
@@ -52,12 +53,12 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("url")
 	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "File to upload via tus")
 	cmd.MarkFlagRequired("input")
-	cmd.Flags().StringVar(&c.bearerToken, "token", "", "Authorization Bearer token")
 	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Path of database to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
 	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
 	cmd.Flags().BoolVarP(&c.quiet, "quiet", "q", false, "Disable all output except for errors")
+	cmd.Flags().StringArrayVarP(&c.headers, "header", "H", []string{}, "Extra HTTP header(s) to add to request (eg \"Authorization: Bearer TOKEN\")")
 
 	return nil
 }
@@ -87,8 +88,10 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	defer f.Close()
 
 	headers := make(http.Header)
-	if c.bearerToken != "" {
-		headers.Add("Authorization", fmt.Sprintf("Bearer %s", c.bearerToken))
+	for _, h := range c.headers {
+		n := strings.Split(h, ": ")[0]
+		v := strings.Join(strings.Split(h, ": ")[1:], ": ")
+		headers.Add(n, v)
 	}
 
 	// set up tus config
