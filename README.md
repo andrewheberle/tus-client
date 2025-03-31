@@ -18,3 +18,7 @@ See https://tus.io for more information.
 * `--no-progress`: Disable progress bar
 * `-q`, `--quiet`:  Disable all output except for errors
 * `--url`: tus upload URL
+
+## sqlitestore
+
+This package is used to implement a SQLite version of the `tus.Store` interface.

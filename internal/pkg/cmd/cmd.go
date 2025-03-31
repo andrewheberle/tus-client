@@ -80,6 +80,11 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 }
 
 func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args []string) error {
+	// make sure store is closed
+	if c.store != nil {
+		defer c.store.Close()
+	}
+
 	// open input file
 	f, err := os.Open(c.inputFile)
 	if err != nil {
