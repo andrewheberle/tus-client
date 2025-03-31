@@ -12,9 +12,9 @@ See https://tus.io for more information.
 * `--chunksize`: Chunks size (in MB) for uploads
 * `--db`: Path of database to allow resumable uploads
 * `--disable-resume`: Disable the resumption of uploads (disables the use of the database)
+* `-H`, `--header`: Extra HTTP header(s) to add to request (eg "Authorization: Bearer TOKEN"). Specify more than once to add multiple headers.
 * `-h`, `--help`: help for tus-client
 * `-i`, `--input`: File to upload
 * `--no-progress`: Disable progress bar
 * `-q`, `--quiet`:  Disable all output except for errors
-* `--token`: Authorization Bearer token
 * `--url`: tus upload URL
