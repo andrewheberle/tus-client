@@ -1,4 +1,4 @@
-package sqlitestore
+package jsonstore
 
 import (
 	"encoding/json"
@@ -56,6 +56,8 @@ func (s *JsonStore) Set(fingerprint, url string) {
 	defer s.mu.Unlock()
 
 	s.store[fingerprint] = url
+
+	s.savestore()
 }
 
 func (s *JsonStore) Delete(fingerprint string) {
@@ -63,23 +65,31 @@ func (s *JsonStore) Delete(fingerprint string) {
 	defer s.mu.Unlock()
 
 	delete(s.store, fingerprint)
+
+	s.savestore()
 }
 
 func (s *JsonStore) Close() {
+	s.savestore()
+}
+
+func (s *JsonStore) savestore() error {
 	f, err := os.CreateTemp(filepath.Dir(s.file), filepath.Base(s.file)+"*")
 	if err != nil {
-		return
+		return err
 	}
 	defer f.Close()
 	defer os.Remove(f.Name())
 
 	enc := json.NewEncoder(f)
 	if err := enc.Encode(s.store); err != nil {
-		return
+		return err
 	}
 	f.Close()
 
 	if err := os.Rename(f.Name(), s.file); err != nil {
-		return
+		return err
 	}
+
+	return nil
 }

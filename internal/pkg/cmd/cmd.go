@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/andrewheberle/tus-client/pkg/jsonstore"
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
 	tus "github.com/eventials/go-tus"
@@ -21,7 +22,7 @@ type rootCommand struct {
 	// flags
 	tusUrl        string
 	inputFile     string
-	db            string
+	storePath     string
 	disableResume bool
 	chunkSizeMb   int
 	noProgress    bool
@@ -53,7 +54,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("url")
 	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "File to upload via tus")
 	cmd.MarkFlagRequired("input")
-	cmd.Flags().StringVar(&c.db, "db", filepath.Join(configPath, "resume.db"), "Path of database to allow resumable uploads")
+	cmd.Flags().StringVar(&c.storePath, "storepath", filepath.Join(configPath, "resume.db"), "Path of store to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
 	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
@@ -66,13 +67,24 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 	if !c.disableResume {
 		// set up store
-		if c.db != "" {
-			store, err := sqlitestore.NewSqliteStore(c.db)
-			if err != nil {
-				return err
-			}
+		if c.storePath != "" {
+			if strings.HasSuffix(c.storePath, ".db") {
+				store, err := sqlitestore.NewSqliteStore(c.storePath)
+				if err != nil {
+					return err
+				}
 
-			c.store = store
+				c.store = store
+			} else if strings.HasSuffix(c.storePath, ".json") {
+				store, err := jsonstore.NewJsonStore(c.storePath)
+				if err != nil {
+					return err
+				}
+
+				c.store = store
+			} else {
+				return fmt.Errorf("storepath must be either a SQLite database (*.db) or a JSON file (*.json)")
+			}
 		}
 	}
 
@@ -127,6 +139,10 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 		return err
 	}
 
+	if !c.quiet {
+		fmt.Printf("Starting upload of \"%s\"...", c.inputFile)
+	}
+
 	// set up progress bar
 	var bar *progressbar.ProgressBar
 	if c.noProgress || c.quiet {
@@ -139,9 +155,6 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	// set initial upload progress
 	bar.Set64(upload.Offset())
 
-	if !c.quiet {
-		fmt.Printf("Starting upload of \"%s\"...", c.inputFile)
-	}
 	for {
 		// check if upload is done
 		if upload.Finished() {
