@@ -1,4 +1,4 @@
-package iecbyteflag
+package iecbyte
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// Flag satisfies the pflag.Value interface
 type Flag struct {
 	n int64
 }

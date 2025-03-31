@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/andrewheberle/tus-client/pkg/iecbyteflag"
+	"github.com/andrewheberle/tus-client/pkg/iecbyte"
 	"github.com/andrewheberle/tus-client/pkg/jsonstore"
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
@@ -30,7 +30,7 @@ type rootCommand struct {
 	noProgress bool
 	quiet      bool
 	headers    []string
-	chunkSize  iecbyteflag.Flag
+	chunkSize  iecbyte.Flag
 
 	store tus.Store
 
@@ -53,7 +53,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	}
 
 	// set default
-	c.chunkSize = iecbyteflag.NewFlag(tus.DefaultConfig().ChunkSize)
+	c.chunkSize = iecbyte.NewFlag(tus.DefaultConfig().ChunkSize)
 
 	// command line args
 	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus upload URL")
