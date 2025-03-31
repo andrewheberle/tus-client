@@ -35,7 +35,7 @@ func NewFlag(n int64) Flag {
 	return Flag{n}
 }
 
-func (f *Flag) String() string {
+func (f Flag) String() string {
 	for _, m := range multipliers {
 		if f.n >= m.Value && f.n%m.Value == 0 {
 			return fmt.Sprintf("%d%s", f.n/m.Value, m.Suffix)
@@ -78,10 +78,10 @@ func (f *Flag) Set(value string) error {
 	return nil
 }
 
-func (f *Flag) Type() string {
+func (f Flag) Type() string {
 	return "bytes (IEC)"
 }
 
-func (f *Flag) Get() int64 {
+func (f Flag) Get() int64 {
 	return f.n
 }
