@@ -30,7 +30,7 @@ func NewFlag(n int64) Flag {
 func (f *Flag) String() string {
 	for _, suffix := range order {
 		m := multipliers[suffix]
-		if f.n >= m {
+		if f.n >= m && f.n%m == 0 {
 			return fmt.Sprintf("%d%s", f.n/m, suffix)
 		}
 	}
@@ -47,6 +47,10 @@ func (f *Flag) Set(value string) error {
 				return err
 			}
 
+			if n < 0 {
+				return fmt.Errorf("cannot be negative")
+			}
+
 			f.n = n * multipliers[suffix]
 
 			return nil
@@ -56,6 +60,10 @@ func (f *Flag) Set(value string) error {
 	n, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		return err
+	}
+
+	if n < 0 {
+		return fmt.Errorf("cannot be negative")
 	}
 
 	f.n = n
