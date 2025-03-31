@@ -8,7 +8,7 @@ See https://tus.io for more information.
 
 ## Command Line Options
 
-* `--chunksize`: Chunks size (in MB) for uploads
+* `--chunksize`: Chunks size for uploads (can be specified in bytes or with "Ki", "Mi", "Gi", "Ti", "Pi" or "Ei" suffix)
 * `--disable-resume`: Disable the resumption of uploads (disables the use of the store)
 * `-H`, `--header`: Extra HTTP header(s) to add to request (eg "Authorization: Bearer TOKEN"). Specify more than once to add multiple headers.
 * `-h`, `--help`: help for tus-client

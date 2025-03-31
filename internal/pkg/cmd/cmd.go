@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/andrewheberle/tus-client/pkg/iecbyteflag"
 	"github.com/andrewheberle/tus-client/pkg/jsonstore"
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
@@ -25,10 +26,11 @@ type rootCommand struct {
 	inputFile     string
 	storePath     string
 	disableResume bool
-	chunkSizeMb   int
-	noProgress    bool
-	quiet         bool
-	headers       []string
+	// chunkSizeMb   int
+	noProgress bool
+	quiet      bool
+	headers    []string
+	chunkSize  iecbyteflag.Flag
 
 	store tus.Store
 
@@ -50,6 +52,9 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 		return err
 	}
 
+	// set default
+	c.chunkSize = iecbyteflag.NewFlag(tus.DefaultConfig().ChunkSize)
+
 	// command line args
 	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus upload URL")
 	cmd.MarkFlagRequired("url")
@@ -57,10 +62,11 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.storePath, "storepath", filepath.Join(configPath, "resume.db"), "Path of store to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the store)")
-	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
+	// cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", int(tus.DefaultConfig().ChunkSize/1024/1024), "Chunks size (in MB) for uploads")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
 	cmd.Flags().BoolVarP(&c.quiet, "quiet", "q", false, "Disable all output except for errors")
 	cmd.Flags().StringArrayVarP(&c.headers, "header", "H", []string{}, "Extra HTTP header(s) to add to request (eg \"Authorization: Bearer TOKEN\")")
+	cmd.Flags().Var(&c.chunkSize, "chunksize", "Chunks size for uploads")
 
 	return nil
 }
@@ -113,7 +119,7 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 
 	// set up tus config
 	config := &tus.Config{
-		ChunkSize:           int64(c.chunkSizeMb) * 1024 * 1024,
+		ChunkSize:           c.chunkSize.Get(),
 		Resume:              !c.disableResume,
 		OverridePatchMethod: false,
 		Store:               c.store,
