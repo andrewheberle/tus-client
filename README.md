@@ -9,7 +9,7 @@ See https://tus.io for more information.
 ## Command Line Options
 
 * `--chunksize`: Chunks size (in MB) for uploads
-* `--disable-resume`: Disable the resumption of uploads (disables the use of the database)
+* `--disable-resume`: Disable the resumption of uploads (disables the use of the store)
 * `-H`, `--header`: Extra HTTP header(s) to add to request (eg "Authorization: Bearer TOKEN"). Specify more than once to add multiple headers.
 * `-h`, `--help`: help for tus-client
 * `-i`, `--input`: File to upload
@@ -37,3 +37,19 @@ This package is used to implement a JSON file-based version of the `tus.Store` i
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/sqlitestore)
 
 This package is used to implement a SQLite version of the `tus.Store` interface.
+
+## Authentication
+
+The tus protocol does not specify any Authentication/Authorization scheme, so this is up to the server implementation in question.
+
+This client supports the addition of arbritrary HTTP headers to the request which allows various authentication options, as follows:
+
+```sh
+tus-client -H "Remote-User-Name: user" -H "Remote-User-Secret: SECRET-API-TOKEN" --input upload.mp4 --url https://some.tus.server/url
+```
+
+Or using "bearer" authentication:
+
+```sh
+tus-client -H "Authorization: Bearer SECRET-API-TOKEN" --input upload.mp4 --url https://some.tus.server/url
+```

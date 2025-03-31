@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/andrewheberle/tus-client/pkg/jsonstore"
@@ -55,7 +56,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "File to upload via tus")
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.storePath, "storepath", filepath.Join(configPath, "resume.db"), "Path of store to allow resumable uploads")
-	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the database)")
+	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the store)")
 	cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", 10, "Chunks size (in MB) for uploads")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
 	cmd.Flags().BoolVarP(&c.quiet, "quiet", "q", false, "Disable all output except for errors")
@@ -104,11 +105,10 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	}
 	defer f.Close()
 
-	headers := make(http.Header)
-	for _, h := range c.headers {
-		n := strings.Split(h, ": ")[0]
-		v := strings.Join(strings.Split(h, ": ")[1:], ": ")
-		headers.Add(n, v)
+	// create http headers
+	headers, err := c.httpHeaders()
+	if err != nil {
+		return err
 	}
 
 	// set up tus config
@@ -199,4 +199,27 @@ func Execute(args []string) error {
 	}
 
 	return nil
+}
+
+func (c *rootCommand) httpHeaders() (http.Header, error) {
+	// list of tus request headers that cannot be set arbritrarly
+	tusHeaders := []string{
+		"Upload-Offset",
+		"Upload-Length",
+		"Tus-Resumable",
+		"Upload-Defer-Length",
+		"Upload-Metadata",
+	}
+
+	headers := make(http.Header)
+	for _, h := range c.headers {
+		name := http.CanonicalHeaderKey(strings.Split(h, ": ")[0])
+		if slices.Contains(tusHeaders, name) {
+			return nil, fmt.Errorf("the %s header is used by tus", name)
+		}
+		value := strings.Join(strings.Split(h, ": ")[1:], ": ")
+		headers.Add(name, value)
+	}
+
+	return headers, nil
 }
