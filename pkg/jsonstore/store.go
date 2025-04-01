@@ -12,6 +12,9 @@ import (
 )
 
 // JsonStore implements a JSON file based store for resumable uploads via github.com/eventials/go-tus
+//
+// Locking is used to ensure concurrent access within the same JsonStore is safe, however using the
+// same underlying JSON file for more than one JsonStore may cause data loss or corruption.
 type JsonStore struct {
 	file  string
 	store map[string]string

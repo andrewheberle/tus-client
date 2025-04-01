@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/andrewheberle/iecbyte"
+	"github.com/andrewheberle/tus-client/pkg/boltstore"
 	"github.com/andrewheberle/tus-client/pkg/jsonstore"
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"
@@ -73,7 +74,14 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 	if !c.disableResume {
 		// set up store
 		if c.storePath != "" {
-			if strings.HasSuffix(c.storePath, ".db") {
+			if strings.HasSuffix(c.storePath, ".bdb") {
+				store, err := boltstore.NewBoltStore(c.storePath)
+				if err != nil {
+					return err
+				}
+
+				c.store = store
+			} else if strings.HasSuffix(c.storePath, ".db") {
 				store, err := sqlitestore.NewSqliteStore(c.storePath)
 				if err != nil {
 					return err
@@ -88,7 +96,7 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 
 				c.store = store
 			} else {
-				return fmt.Errorf("storepath must be either a SQLite database (*.db) or a JSON file (*.json)")
+				return fmt.Errorf("storepath must be either a Bolt DB (*.bdb), SQLite database (*.db) or a JSON file (*.json)")
 			}
 		}
 	}

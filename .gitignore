@@ -1,5 +1,6 @@
 tus-client
 tus-client.exe
 !cmd/tus-client/
+*.bdb
 *.db
 *.json
