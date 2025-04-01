@@ -26,11 +26,10 @@ type rootCommand struct {
 	inputFile     string
 	storePath     string
 	disableResume bool
-	// chunkSizeMb   int
-	noProgress bool
-	quiet      bool
-	headers    []string
-	chunkSize  iecbyte.Flag
+	noProgress    bool
+	quiet         bool
+	headers       []string
+	chunkSize     iecbyte.Flag
 
 	store tus.Store
 
@@ -62,7 +61,6 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.storePath, "storepath", filepath.Join(configPath, "resume.db"), "Path of store to allow resumable uploads")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the store)")
-	// cmd.Flags().IntVar(&c.chunkSizeMb, "chunksize", int(tus.DefaultConfig().ChunkSize/1024/1024), "Chunks size (in MB) for uploads")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
 	cmd.Flags().BoolVarP(&c.quiet, "quiet", "q", false, "Disable all output except for errors")
 	cmd.Flags().StringArrayVarP(&c.headers, "header", "H", []string{}, "Extra HTTP header(s) to add to request (eg \"Authorization: Bearer TOKEN\")")
