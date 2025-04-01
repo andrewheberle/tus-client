@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/andrewheberle/tus-client/pkg/iecbyte"
+	"github.com/andrewheberle/iecbyte"
 	"github.com/andrewheberle/tus-client/pkg/jsonstore"
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
 	"github.com/bep/simplecobra"

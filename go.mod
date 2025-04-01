@@ -3,6 +3,7 @@ module github.com/andrewheberle/tus-client
 go 1.24.0
 
 require (
+	github.com/andrewheberle/iecbyte v1.0.0
 	github.com/bep/simplecobra v0.6.0
 	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
 	github.com/glebarez/go-sqlite v1.22.0

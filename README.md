@@ -15,7 +15,7 @@ See https://tus.io for more information.
 * `-i`, `--input`: File to upload
 * `--no-progress`: Disable progress bar
 * `-q`, `--quiet`:  Disable all output except for errors
-* `--storepath`: Path of database or JSON file to allow resumable uploads
+* `--storepath`: Path of database or JSON file to allow resumable uploads (defaults to using SQLite store in a user specific OS dependent location)
 * `--url`: tus upload URL
 
 ## Resumption of Uploads
@@ -26,17 +26,28 @@ This repo includes two implementations of this interface, one supporting SQLite 
 
 Depending on the extension provided for the `--storepath` option, either the SQLite or JSON store type will be used.
 
-### jsonstore
+The default is to use the `sqlitestore.Store` implemention below, with the default path to the database dependent on the OS in question:
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/jsonstore)
+| OS      | Location                                                                                   |
+|---------|--------------------------------------------------------------------------------------------|
+| Linux   | `$XDG_CONFIG_HOME/tus-client/resume.db` or `$HOME/.config/tus-client/resume.db`            |
+| Windows | `%APPDATA%\tus-client\resume.db` or `C:\Users\%USER%\AppData\Roaming\tus-client\resume.db` |
+| macOS   | `$HOME/Library/Application Support/tus-client/resume.db`                                   |
 
-This package is used to implement a JSON file-based version of the `tus.Store` interface.
 
 ### sqlitestore
 
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/sqlitestore)
 
 This package is used to implement a SQLite version of the `tus.Store` interface.
+
+### jsonstore
+
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/jsonstore)
+
+This package is used to implement a JSON file-based version of the `tus.Store` interface.
+
+Due to the simplisitic nature of this implementation, it is not safe to have multiple users of the same JSON file as a `tus.Store`.
 
 ## Authentication
 
