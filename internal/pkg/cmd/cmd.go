@@ -51,7 +51,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 		return err
 	}
 
-	// set default
+	// set default for chunk size based on tus.DefaultConfig()
 	c.chunkSize = iecbyte.NewFlag(tus.DefaultConfig().ChunkSize)
 
 	// command line args
