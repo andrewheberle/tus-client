@@ -25,6 +25,7 @@ type rootCommand struct {
 	// flags
 	tusUrl        string
 	inputFile     string
+	storeType     tusStoreType
 	storePath     string
 	disableResume bool
 	noProgress    bool
@@ -35,6 +36,58 @@ type rootCommand struct {
 	store tus.Store
 
 	commands []simplecobra.Commander
+}
+
+const (
+	tusStoreNone = iota
+	tusStoreAuto
+	tusStoreBolt
+	tusStoreJson
+	tusStoreSqlite
+)
+
+type tusStoreType struct {
+	s int
+}
+
+func (s tusStoreType) String() string {
+	switch s.s {
+	case tusStoreNone:
+		return "none"
+	case tusStoreAuto:
+		return "auto"
+	case tusStoreBolt:
+		return "bolt"
+	case tusStoreJson:
+		return "json"
+	case tusStoreSqlite:
+		return "sqlite"
+	default:
+		return "unsupported"
+	}
+}
+
+func (s tusStoreType) Type() string {
+	return "string"
+}
+
+func (s *tusStoreType) Set(value string) error {
+	switch value {
+	case "", "none":
+		s.s = tusStoreNone
+	case "auto":
+		s.s = tusStoreAuto
+	case "bolt":
+		s.s = tusStoreBolt
+	case "json":
+		s.s = tusStoreJson
+	case "sqlite":
+		s.s = tusStoreSqlite
+	default:
+		return fmt.Errorf("must be one of \"none\", \"auto\", \"bolt\", \"json\" or \"sqlite\"")
+	}
+
+	return nil
 }
 
 func (c *rootCommand) Name() string {
@@ -54,6 +107,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 
 	// set default for chunk size based on tus.DefaultConfig()
 	c.chunkSize = iecbyte.NewFlag(tus.DefaultConfig().ChunkSize)
+	c.storeType = tusStoreType{tusStoreSqlite}
 
 	// command line args
 	cmd.Flags().StringVar(&c.tusUrl, "url", "", "tus upload URL")
@@ -61,6 +115,7 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 	cmd.Flags().StringVarP(&c.inputFile, "input", "i", "", "File to upload via tus")
 	cmd.MarkFlagRequired("input")
 	cmd.Flags().StringVar(&c.storePath, "storepath", filepath.Join(configPath, "resume.db"), "Path of store to allow resumable uploads")
+	cmd.Flags().Var(&c.storeType, "storetype", "Type of store")
 	cmd.Flags().BoolVar(&c.disableResume, "disable-resume", false, "Disable the resumption of uploads (disables the use of the store)")
 	cmd.Flags().BoolVar(&c.noProgress, "no-progress", false, "Disable progress bar")
 	cmd.Flags().BoolVarP(&c.quiet, "quiet", "q", false, "Disable all output except for errors")
@@ -71,34 +126,9 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 }
 
 func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
+	// assuming resumable uploads are not disabled, try to set up store
 	if !c.disableResume {
-		// set up store
-		if c.storePath != "" {
-			if strings.HasSuffix(c.storePath, ".bdb") {
-				store, err := boltstore.NewBoltStore(c.storePath)
-				if err != nil {
-					return err
-				}
-
-				c.store = store
-			} else if strings.HasSuffix(c.storePath, ".db") {
-				store, err := sqlitestore.NewSqliteStore(c.storePath)
-				if err != nil {
-					return err
-				}
-
-				c.store = store
-			} else if strings.HasSuffix(c.storePath, ".json") {
-				store, err := jsonstore.NewJsonStore(c.storePath)
-				if err != nil {
-					return err
-				}
-
-				c.store = store
-			} else {
-				return fmt.Errorf("storepath must be either a Bolt DB (*.bdb), SQLite database (*.db) or a JSON file (*.json)")
-			}
-		}
+		c.setupStore()
 	}
 
 	return nil
@@ -234,4 +264,64 @@ func (c *rootCommand) httpHeaders() (http.Header, error) {
 	}
 
 	return headers, nil
+}
+
+func (c *rootCommand) setupStore() error {
+	// set up store
+	if c.storePath != "" {
+		switch c.storeType.s {
+		case tusStoreNone:
+			return nil
+		case tusStoreAuto:
+			if strings.HasSuffix(c.storePath, ".bdb") {
+				store, err := boltstore.NewBoltStore(c.storePath)
+				if err != nil {
+					return err
+				}
+
+				c.store = store
+			} else if strings.HasSuffix(c.storePath, ".db") {
+				store, err := sqlitestore.NewSqliteStore(c.storePath)
+				if err != nil {
+					return err
+				}
+
+				c.store = store
+			} else if strings.HasSuffix(c.storePath, ".json") {
+				store, err := jsonstore.NewJsonStore(c.storePath)
+				if err != nil {
+					return err
+				}
+
+				c.store = store
+			} else {
+				return fmt.Errorf("storepath must be either a Bolt DB (*.bdb), SQLite database (*.db) or a JSON file (*.json)")
+			}
+		case tusStoreBolt:
+			store, err := boltstore.NewBoltStore(c.storePath)
+			if err != nil {
+				return err
+			}
+
+			c.store = store
+		case tusStoreJson:
+			store, err := jsonstore.NewJsonStore(c.storePath)
+			if err != nil {
+				return err
+			}
+
+			c.store = store
+		case tusStoreSqlite:
+			store, err := sqlitestore.NewSqliteStore(c.storePath)
+			if err != nil {
+				return err
+			}
+
+			c.store = store
+		default:
+			return fmt.Errorf("invalid store type")
+		}
+	}
+
+	return nil
 }
