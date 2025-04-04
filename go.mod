@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/andrewheberle/iecbyte v1.0.4
-	github.com/andrewheberle/ubolt v1.7.1
+	github.com/andrewheberle/ubolt v1.7.3
 	github.com/bep/simplecobra v0.6.0
 	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
 	github.com/glebarez/go-sqlite v1.22.0
