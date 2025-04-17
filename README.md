@@ -35,11 +35,11 @@ The default is to use the `sqlitestore.Store` implemention below, with the defau
 | macOS   | `$HOME/Library/Application Support/tus-client/resume.db`                                   |
 
 
-### sqlitestore
+### boltstore
 
-[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/sqlitestore)
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/boltstore)
 
-This package is used to implement a SQLite version of the `tus.Store` interface.
+This package is used to implement a [bbolt](https://github.com/etcd-io/bbolt) version of the `tus.Store` interface.
 
 ### jsonstore
 
@@ -48,6 +48,12 @@ This package is used to implement a SQLite version of the `tus.Store` interface.
 This package is used to implement a JSON file-based version of the `tus.Store` interface.
 
 Due to the simplisitic nature of this implementation, it is not safe to have multiple users of the same JSON file as a `tus.Store`.
+
+### sqlitestore
+
+[![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/andrewheberle/tus-client/pkg/sqlitestore)
+
+This package is used to implement a SQLite version of the `tus.Store` interface.
 
 ## Authentication
 
