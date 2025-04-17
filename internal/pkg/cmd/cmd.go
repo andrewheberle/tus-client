@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/andrewheberle/iecbyte"
+	"github.com/andrewheberle/simplecommand"
 	"github.com/andrewheberle/tus-client/pkg/boltstore"
 	"github.com/andrewheberle/tus-client/pkg/jsonstore"
 	"github.com/andrewheberle/tus-client/pkg/sqlitestore"
@@ -20,8 +21,6 @@ import (
 )
 
 type rootCommand struct {
-	name string
-
 	// flags
 	tusUrl        string
 	inputFile     string
@@ -35,7 +34,7 @@ type rootCommand struct {
 
 	store tus.Store
 
-	commands []simplecobra.Commander
+	*simplecommand.Command
 }
 
 const (
@@ -90,11 +89,8 @@ func (s *tusStoreType) Set(value string) error {
 	return nil
 }
 
-func (c *rootCommand) Name() string {
-	return c.name
-}
-
 func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
+	c.Command.Init(cd)
 	cmd := cd.CobraCommand
 	cmd.Short = "A command line tus client"
 
@@ -126,6 +122,10 @@ func (c *rootCommand) Init(cd *simplecobra.Commandeer) error {
 }
 
 func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
+	if err := c.Command.PreRun(this, runner); err != nil {
+		return err
+	}
+
 	// assuming resumable uploads are not disabled, try to set up store
 	if !c.disableResume {
 		c.setupStore()
@@ -135,11 +135,6 @@ func (c *rootCommand) PreRun(this, runner *simplecobra.Commandeer) error {
 }
 
 func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args []string) error {
-	// make sure store is closed
-	if c.store != nil {
-		defer c.store.Close()
-	}
-
 	// open input file
 	f, err := os.Open(c.inputFile)
 	if err != nil {
@@ -167,6 +162,11 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	client, err := tus.NewClient(c.tusUrl, config)
 	if err != nil {
 		return err
+	}
+
+	// make sure store is closed (if used)
+	if c.store != nil {
+		defer c.store.Close()
 	}
 
 	// create upload from file
@@ -222,14 +222,10 @@ func (c *rootCommand) Run(ctx context.Context, cd *simplecobra.Commandeer, args 
 	return nil
 }
 
-func (c *rootCommand) Commands() []simplecobra.Commander {
-	return c.commands
-}
-
 func Execute(args []string) error {
 	// set up rootCmd
 	rootCmd := &rootCommand{
-		name: "tus-client",
+		Command: simplecommand.New("tus-client", "A command line tus client"),
 	}
 	x, err := simplecobra.New(rootCmd)
 	if err != nil {
