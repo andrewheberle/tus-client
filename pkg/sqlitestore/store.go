@@ -1,19 +1,20 @@
+// sqlitestore implements an SQLite based store for resumable uploads via [github.com/eventials/go-tus]
 package sqlitestore
 
 import (
 	"database/sql"
 
-	"github.com/eventials/go-tus"
+	tus "github.com/eventials/go-tus"
 
 	_ "github.com/glebarez/go-sqlite"
 )
 
-// SqliteStore implements an SQLite based store for resumable uploads via github.com/eventials/go-tus
+// The SqliteStore type satisfies the [tus.Store] interface
 type SqliteStore struct {
 	db *sql.DB
 }
 
-// NewSqliteStore creates a new SqliteStore using the provided database path
+// NewSqliteStore creates a new [*SqliteStore] using the provided database path
 func NewSqliteStore(database string) (tus.Store, error) {
 	db, err := sql.Open("sqlite", database)
 	if err != nil {

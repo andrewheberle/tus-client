@@ -1,3 +1,7 @@
+// jsonstore implements a JSON file based store for resumable uploads via [github.com/eventials/go-tus]
+//
+// Locking is used to ensure concurrent access within the same [JsonStore] is safe, however using the
+// same underlying JSON file for more than one [JsonStore] may cause data loss or corruption.
 package jsonstore
 
 import (
@@ -8,20 +12,17 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/eventials/go-tus"
+	tus "github.com/eventials/go-tus"
 )
 
-// JsonStore implements a JSON file based store for resumable uploads via github.com/eventials/go-tus
-//
-// Locking is used to ensure concurrent access within the same JsonStore is safe, however using the
-// same underlying JSON file for more than one JsonStore may cause data loss or corruption.
+// The JsonStore type satisfies the [tus.Store] interface
 type JsonStore struct {
 	file  string
 	store map[string]string
 	mu    sync.RWMutex
 }
 
-// NewJsonStore creates a new JsonStore using the provided file path
+// NewJsonStore creates a new [*JsonStore] using the provided file path
 func NewJsonStore(file string) (tus.Store, error) {
 	f, err := os.Open(file)
 	if err != nil {

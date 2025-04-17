@@ -1,11 +1,12 @@
+// boltstore implements a [go.etcd.io/bbolt] based store for resumable uploads via [github.com/eventials/go-tus]
 package boltstore
 
 import (
 	"github.com/andrewheberle/ubolt"
-	"github.com/eventials/go-tus"
+	tus "github.com/eventials/go-tus"
 )
 
-// BoltStore implements a go.etcd.io/bbolt based store for resumable uploads via github.com/eventials/go-tus
+// BoltStore implements the [tus.Store] interface
 type BoltStore struct {
 	db *ubolt.Bucket
 }
