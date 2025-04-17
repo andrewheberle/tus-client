@@ -73,6 +73,9 @@ func (s *JsonStore) Delete(fingerprint string) {
 }
 
 func (s *JsonStore) Close() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	s.savestore()
 }
 
