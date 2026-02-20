@@ -7,6 +7,8 @@ github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/andrewheberle/iecbyte v1.0.4 h1:cbSYIs9hY4nr+PnHeklf+owj/bWp//fI8NG+azubx9A=
 github.com/andrewheberle/iecbyte v1.0.4/go.mod h1:bp/RIuEA9WsYLdugF4RagZ5jiFX5uD8AlEpQo7fD8yo=
+github.com/andrewheberle/iecbyte v1.1.0 h1:WxdEuCP22vNgDGE1Aq/wt6uqi9YCvh30DKYlxX5yuI8=
+github.com/andrewheberle/iecbyte v1.1.0/go.mod h1:bp/RIuEA9WsYLdugF4RagZ5jiFX5uD8AlEpQo7fD8yo=
 github.com/andrewheberle/simplecommand v0.2.0 h1:ZJRESmjd8zsHGTK1EY5ickZOtWNlQLCh4qSUiSPVIsE=
 github.com/andrewheberle/simplecommand v0.2.0/go.mod h1:mcCWB3Ano9gsv7FW288hXDZr4H9XPYIgXxDJP1Z1cYY=
 github.com/andrewheberle/simplecommand v0.3.1 h1:Y+aMjNkPOTaZG66oKOdR5OiPwcYc38Nu9RongIN4+Jc=
