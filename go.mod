@@ -7,7 +7,7 @@ require (
 	github.com/andrewheberle/simplecommand v0.5.1
 	github.com/andrewheberle/ubolt v1.7.3
 	github.com/bep/simplecobra v0.7.0
-	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
+	github.com/eventials/go-tus v0.0.0-20250612203642-7827b129cd4c
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f
 	github.com/schollz/progressbar/v3 v3.18.0
