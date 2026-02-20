@@ -3,7 +3,7 @@ module github.com/andrewheberle/tus-client
 go 1.25
 
 require (
-	github.com/andrewheberle/iecbyte v1.0.4
+	github.com/andrewheberle/iecbyte v1.1.0
 	github.com/andrewheberle/simplecommand v0.5.1
 	github.com/andrewheberle/ubolt v1.7.3
 	github.com/bep/simplecobra v0.7.0
