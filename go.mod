@@ -1,12 +1,12 @@
 module github.com/andrewheberle/tus-client
 
-go 1.25
+go 1.26
 
 require (
 	github.com/andrewheberle/iecbyte v1.0.4
 	github.com/andrewheberle/simplecommand v0.5.1
 	github.com/andrewheberle/ubolt v1.7.3
-	github.com/bep/simplecobra v0.7.0
+	github.com/bep/simplecobra v0.8.0
 	github.com/eventials/go-tus v0.0.0-20220610120217-05d0564bb571
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f

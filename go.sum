@@ -28,6 +28,8 @@ github.com/bep/simplecobra v0.6.1 h1:ORBAC5CSar99/NPZ5fCthCx/uvlm7ry58wwDsZ23a20
 github.com/bep/simplecobra v0.6.1/go.mod h1:hmtjyHv6xwD637ScIRP++0NKkR5szrHuMw5BxMUH66s=
 github.com/bep/simplecobra v0.7.0 h1:kG8ZPwEc1o96hlIVGXcrrvwC8RornBqvMD3+pS0Z7y0=
 github.com/bep/simplecobra v0.7.0/go.mod h1:PDXvBWH1ZMX05DRQ25ub/C6kKUuq+jROPgjbVz8wO1g=
+github.com/bep/simplecobra v0.8.0 h1:s9rOX0I9rk5gujqaEanfAutlBNjPxsLMt58ygmzng18=
+github.com/bep/simplecobra v0.8.0/go.mod h1:gyoaW6x8y36723fumVwwC7oe66L20AbxGBNED5m9PKA=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40 h1:y4B3+GPxKlrigF1ha5FFErxK+sr6sWxQovRMzwMhejo=
 github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40/go.mod h1:8rLXio+WjiTceGBHIoTvn60HIbs7Hm7bcHjyrSqYB9c=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
